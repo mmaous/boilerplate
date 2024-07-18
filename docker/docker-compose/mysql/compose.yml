@@ -1,0 +1,15 @@
+services:  
+  tms-mysql:
+    image: mysql:8.0
+    container_name: tms-dev-db
+    ports:
+      - "4042:3306"
+    restart: always
+    environment:
+      MYSQL_DATABASE: tms
+      MYSQL_USER: dev_user
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:pwd123}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:pwd123}
+    volumes:
+      - ./mysql-data:/var/lib/mysql
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --sql-mode=""
