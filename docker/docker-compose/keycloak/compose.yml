@@ -12,11 +12,17 @@ services:
         - KC_DB_PASSWORD=${KC_DB_PASSWORD:pwd123}
         - KC_DB_USERNAME=kcdb_user
         - KC_DB_URL_PORT=5432
+        - KC_HEALTH_ENABLED=true
       entrypoint: /opt/keycloak/bin/kc.sh start-dev
       restart: always
       depends_on:
         - pg-service
-
+      healthcheck:
+        test: [ 'CMD-SHELL', '[ -f /tmp/HealthCheck.java ] || echo "public class HealthCheck { public static void main(String[] args) throws java.lang.Throwable { System.exit(java.net.HttpURLConnection.HTTP_OK == ((java.net.HttpURLConnection)new java.net.URL(args[0]).openConnection()).getResponseCode() ? 0 : 1); } }" > /tmp/HealthCheck.java && java /tmp/HealthCheck.java http://localhost:8080/health/live' ]
+        interval: 5s
+        timeout: 5s
+        retries: 30
+      
   pg-service:
     image: postgres:16.0
     container_name: kc-pg
@@ -32,7 +38,8 @@ services:
       - PGDATA=/var/lib/postgresql/data/keycloak
     restart: unless-stopped
     healthcheck:
-      test: [ 'CMD-SHELL', '[ -f /tmp/HealthCheck.java ] || echo "public class HealthCheck { public static void main(String[] args) throws java.lang.Throwable { System.exit(java.net.HttpURLConnection.HTTP_OK == ((java.net.HttpURLConnection)new java.net.URL(args[0]).openConnection()).getResponseCode() ? 0 : 1); } }" > /tmp/HealthCheck.java && java /tmp/HealthCheck.java http://localhost:8080/health/live' ]
-      interval: 5s
-      timeout: 5s
-      retries: 30
+      test: [ "CMD-SHELL", "pg_isready"]
+      interval: 30s
+      timeout: 60s
+      retries: 5
+      start_period: 80s
