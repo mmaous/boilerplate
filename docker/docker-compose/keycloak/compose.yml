@@ -30,4 +30,9 @@ services:
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:pwd123}
       - PGPASSWORD=123
       - PGDATA=/var/lib/postgresql/data/keycloak
-    restart: always
+    restart: unless-stopped
+    healthcheck:
+      test: [ 'CMD-SHELL', '[ -f /tmp/HealthCheck.java ] || echo "public class HealthCheck { public static void main(String[] args) throws java.lang.Throwable { System.exit(java.net.HttpURLConnection.HTTP_OK == ((java.net.HttpURLConnection)new java.net.URL(args[0]).openConnection()).getResponseCode() ? 0 : 1); } }" > /tmp/HealthCheck.java && java /tmp/HealthCheck.java http://localhost:8080/health/live' ]
+      interval: 5s
+      timeout: 5s
+      retries: 30
